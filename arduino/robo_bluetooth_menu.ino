@@ -6,7 +6,7 @@
 // ROBÔ COM MENU BLUETOOTH
 // =====================================================
 // Recebe comandos via Bluetooth para desenhar formas
-// HC-05: RX no pino 10, TX no pino 11
+// HC-06: RX no pino 10, TX no pino 11
 // =====================================================
 // PINOS DO TB6612FNG
 // =====================================================
@@ -265,26 +265,55 @@ void drawCircle() {
 }
 
 // =====================================================
+// PROCESSA COMANDO
+// =====================================================
+
+void processCommand(String command) {
+  command.toUpperCase();
+  
+  if (command == "TRIANGULO") {
+    drawTriangle();
+  } 
+  else if (command == "QUADRADO") {
+    drawSquare();
+  } 
+  else if (command == "RETANGULO") {
+    drawRectangle();
+  } 
+  else if (command == "CIRCULO") {
+    drawCircle();
+  } 
+  else if (command == "MENU") {
+    showMenu();
+  }
+  else {
+    BTSerial.println("Comando invalido!");
+    BTSerial.println("Digite: TRIANGULO, QUADRADO, RETANGULO, CIRCULO ou MENU");
+    Serial.println("Comando invalido!");
+  }
+}
+
+// =====================================================
 // MENU
 // =====================================================
 
 void showMenu() {
   BTSerial.println("\n========== MENU ROBO ==========");
-  BTSerial.println("Escolha uma forma:");
-  BTSerial.println("  T - Triangulo");
-  BTSerial.println("  Q - Quadrado");
-  BTSerial.println("  R - Retangulo");
-  BTSerial.println("  C - Circulo");
-  BTSerial.println("  M - Mostrar Menu");
+  BTSerial.println("Digite uma das opcoes:");
+  BTSerial.println("  TRIANGULO");
+  BTSerial.println("  QUADRADO");
+  BTSerial.println("  RETANGULO");
+  BTSerial.println("  CIRCULO");
+  BTSerial.println("  MENU");
   BTSerial.println("===============================\n");
   
   Serial.println("\n========== MENU ROBO ==========");
-  Serial.println("Escolha uma forma:");
-  Serial.println("  T - Triangulo");
-  Serial.println("  Q - Quadrado");
-  Serial.println("  R - Retangulo");
-  Serial.println("  C - Circulo");
-  Serial.println("  M - Mostrar Menu");
+  Serial.println("Digite uma das opcoes:");
+  Serial.println("  TRIANGULO");
+  Serial.println("  QUADRADO");
+  Serial.println("  RETANGULO");
+  Serial.println("  CIRCULO");
+  Serial.println("  MENU");
   Serial.println("===============================\n");
 }
 
@@ -294,7 +323,7 @@ void showMenu() {
 
 void setup() {
   Serial.begin(9600);
-  BTSerial.begin(9600);  // HC-05 baud rate
+  BTSerial.begin(9600);  // HC-06 baud rate
 
   Serial.println("=== ROBO COM BLUETOOTH INICIANDO ===");
 
@@ -331,45 +360,22 @@ void setup() {
 void loop() {
   // Lê dados do Bluetooth
   if (BTSerial.available()) {
-    char cmd = BTSerial.read();
-    cmd = toupper(cmd);  // Converte para maiúscula
+    String command = "";
+    
+    while (BTSerial.available()) {
+      char ch = BTSerial.read();
+      if (ch != '\n' && ch != '\r') {
+        command += ch;
+      }
+      delay(5);
+    }
 
-    Serial.print("Comando recebido: ");
-    Serial.println(cmd);
-
-    switch (cmd) {
-      case 'T':
-        drawTriangle();
-        delay(1000);
-        showMenu();
-        break;
-
-      case 'Q':
-        drawSquare();
-        delay(1000);
-        showMenu();
-        break;
-
-      case 'R':
-        drawRectangle();
-        delay(1000);
-        showMenu();
-        break;
-
-      case 'C':
-        drawCircle();
-        delay(1000);
-        showMenu();
-        break;
-
-      case 'M':
-        showMenu();
-        break;
-
-      default:
-        BTSerial.println("Comando inválido! Digite M para ver o menu.");
-        Serial.println("Comando inválido! Digite M para ver o menu.");
-        break;
+    if (command.length() > 0) {
+      Serial.print("Comando recebido: ");
+      Serial.println(command);
+      processCommand(command);
+      delay(1000);
+      showMenu();
     }
   }
 
